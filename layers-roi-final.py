@@ -4,27 +4,39 @@ Created on Thu Oct 26 12:23:54 2023
 @author: guilherme borchardt
 Estimation of layer performance using a probiotc as a feed additive.
 
-Version: 1+
+version 1.0
 
-add local currency based on system default
+added local currency based on system default
+
+Version: 1.1+
+
+added copy to clipboard report
+
+
+next improvements
+
+should consider value from discart not died hen from improvement of mortality
+not considering egg mass improvement
 
 """
 
 import PySimpleGUI as psg
 import numpy as np
-import babel.numbers
+#import babel.numbers
 from decimal import Decimal
 #import decimal
 #import babel
 from babel import numbers
 #import babel
-import locale
+#import locale
+from pandas.io import clipboard
+
    
 
 def main():
     app_title='ROI Estimation - Commercial Layers'
-    app_version='v. 1.0+ working'
-    
+    app_version='v 1.1+ working'
+    n_hens=1
  
     # setup enviroment
     
@@ -71,7 +83,7 @@ def main():
         [psg.Text('Daily feed intake / hen(g):', size=input_size_lbl, justification='left'),
          psg.Input('100', key='-FEED_INTAKE_AVER-', size=input_field_size, justification='center'),
          psg.Text('Hen housed eggs / cycle', size=input_size_lbl, justification='center')],
-        [psg.Text('Age (weeks):', size=input_size_lbl, justification='left'),
+        [psg.Text(' Final hens age (weeks):', size=input_size_lbl, justification='left'),
          psg.Input('100', key='-PROD_WEEKS-', size=input_field_size, justification='center'),
          psg.Slider(range=(320,520), size=slider_secund_size, expand_x=False, default_value=420, enable_events=True ,orientation='h', key='-SL_TOTAL_EGG_CYCLE-')],
         [psg.Text('Probiotic Cost / Mton:', size=input_size_lbl, justification='left'), psg.Input('50', key='-PROB_COST-', size=input_field_size, justification='center')],
@@ -79,8 +91,8 @@ def main():
          psg.Text('Redution on Mortality rate (%)', size=input_size_lbl, justification='center', expand_x=True)],
         [psg.Slider(range=(.1,3), size=slider_prim_size, expand_x=True, default_value=1.5, enable_events=True ,orientation='h', key='-SL_LAY_IMPROV-', resolution=.1),
          psg.Slider(range=(0,2), size=slider_prim_size, expand_x=True, default_value=1, enable_events=True ,orientation='h', key='-SL_DELTA_MORT_HEN-', resolution=.1)],
-        [psg.Text('NUMBER OF HENS', size=(20,1), justification='center', expand_x=True)],
-        [psg.Slider(range=[1,100000], size=slider_prim_size, expand_x=True, default_value=1, enable_events=True ,orientation='h', key='-NUMBER_LAYERS-', resolution=10000)],
+        [psg.Text(f'NUMBER OF HENS = {n_hens}', size=(20,1), justification='center', expand_x=True, enable_events=True, key='-N_HENS_LBL-')],
+        [psg.Slider(range=[0,100000], size=slider_prim_size, expand_x=True, default_value=1, enable_events=True ,orientation='h', key='-NUMBER_LAYERS-', resolution=10000)],
        
         [psg.Text('Parameter:     ', size=input_size_lbl, justification='left'),
          psg.Text('Value', size=input_size_lbl, justification='center'),
@@ -92,14 +104,14 @@ def main():
         
         [psg.Text('Delta Income:', size=input_size_lbl, justification='left'),
          psg.Input('', disabled=True,  key='-EGG_INCOME_HEN-', size=input_field_size, justification='center')],
-        [psg.Text('Probiotic Inv.:', size=input_size_lbl, justification='left'),
+        [psg.Text('Probiotic Investiment:', size=input_size_lbl, justification='left'),
          psg.Input('', disabled=True,  key='-PROBIOTIC_COST_HEN-', size=input_field_size, justification='center')],
-        [psg.Text('Profit - Probiotic:', size=input_size_lbl, justification='left'),
+        [psg.Text('Gross profit - Probiotic:', size=input_size_lbl, justification='left'),
          psg.Input('', disabled=True,  key='-PROFIT_HEN_PROB-', size=input_field_size, justification='center')], 
-        [psg.Text('Profit - Control:', size=input_size_lbl, justification='left'),
+        [psg.Text('Gross profit - Control:', size=input_size_lbl, justification='left'),
          psg.Input('', disabled=True,  key='-PROFIT_HEN_CONTROL-', size=input_field_size, justification='center')],
     
-        [psg.Text('Delta Profit(%):', size=input_size_lbl, justification='left'),
+        [psg.Text('Delta gross profit(%):', size=input_size_lbl, justification='left'),
          psg.Input('', disabled=True,  key='-DELTA_PROFIT_HEN-', size=input_field_size, justification='center')],
         [psg.Text('ROI (%):', size=input_size_lbl, justification='left'),
          psg.Input('', disabled=True,  key='-ROI-', size=input_field_size, justification='center', font=16)],
@@ -109,7 +121,8 @@ def main():
          
         [ psg.Button('Exit', expand_x=False, key='-EXIT-' ),
          psg.Text('Currency:', size=input_size_lbl, justification='right'),
-         psg.OptionMenu(currency_menu, key='-CURRENCY-', size=(4,1))],
+         psg.OptionMenu(currency_menu, key='-CURRENCY-', size=(4,1)),
+         psg.Button('Copy to Clipboard', expand_x=False, key='-COPY-')],
         [psg.Text(rodape_text, size=input_size_lbl, justification='center', font=("arial 10"), key='-RODAPE-', expand_x=True)],
         
         ]
@@ -131,19 +144,7 @@ def main():
         #curr_str_atul = babel.numbers.format_currency(decimal.Decimal(value ), curr )
         curr_str_atul = numbers.format_currency(Decimal(value ), curr )
         return curr_str_atul
-        '''
-        if curr in currency_dict:
-            ulocale= (currency_dict[curr])
-            curr_str_atul = babel.numbers.format_currency( decimal.Decimal(value ), curr )
-            #curr_str_atul = babel.numbers.format_currency(value, curr, locale=ulocale, group_separator=True)
-            print(f'I am in function: {curr}')
-            return curr_str_atul
-        else:
-            psg.popup_error(f'ERROR - Currency from {curr} not found! ', keep_on_top=True)
-            curr_str_atul = babel.numbers.format_currency(value, 'US', locale='en_US')
-            
-            return curr_str_atul
-        '''
+       
            
         
     def str_to_num_convert(string):
@@ -159,6 +160,7 @@ def main():
     def creat_distrib(aver, perc, distr_type):
         # distrib type - define if it is normal, uniform, triangular
         n=20000 # number of repetitions used in distributions
+       
         if distr_type.upper()=='N': # normal distribution
                 std = aver*perc*numbers_of_std_desv
                 distrib=np.random.normal(aver,std,n)
@@ -317,9 +319,12 @@ def main():
             
             n_layers = str_to_num_convert(values['-NUMBER_LAYERS-'])
             
+            
             if n_layers==0:
                 n_layers=1
                 window['-NUMBER_LAYERS-'].update(n_layers)
+                
+            
             
             
             currency_choice_str = (values['-CURRENCY-'])
@@ -353,6 +358,10 @@ def main():
             window['-PROFIT_HEN_CONTROL-'].update(profit_total_control_formated)
             window['-PROFIT_HEN_PROB-'].update(profit_total_probiotic_formated)
             window['-DELTA_PROFIT_HEN-'].update(str(f'{perc_profit_hen} %'))
+            
+            lb= f'NUMBER OF HENS = {int(n_layers)}'
+            window['-N_HENS_LBL-'].update(lb)
+        
        
             roi_str = str(f'{roi} %') # ROI with %
             if roi<=0:
@@ -362,8 +371,39 @@ def main():
             elif roi>20:
                 window['-ROI-'].update(roi_str, text_color='#343ec5')    
             
+            report_part1 = f'*** {app_title} - {app_version} ***\n\n'
+            report_part2 = f'Egg price (/dozen) : {format_currency(egg_price_aver_num, currency_choice_str)} - +-({egg_price_var_perc_num*100} %)\n'
+            report_part3 = f'Feed price (/Mton) : {format_currency(feed_price_aver_num, currency_choice_str)} - +-({feed_price_var_perc_num*100} %)\n'
+            report_line = '-'*60+'\n'
+            report_part4 = f'Average feed intake / hen (g/d): {feed_intake_aver_num}\n'
+            report_part5 = f'Hens Age at end of cycle (weeks): {prod_weeks_num}\n'
+            report_part6 = f'Total eggs / hen / cycle: {total_eggs_num}\n'
+            report_line = '-'*60+'\n'
+            report_part7 = f'Estimated Production Improvement with Probiotic\n\n'
+            report_part8 = f'Laying rate improvement: {laying_perc_improv_num} %\n'
+            report_part9 = f'Drop of mortality rate :  -{delta_mort_hen_improv} %\n'
+            report_line = '-'*60+'\n'
+            report_part_10 = f'*** Report below refers {int(n_layers)} hen(s) ***\n'+'-'*60+'\n'
+            report_part_11 = f'Number of extra eggs due to improv. laying rate: {round(extra_eggs_hen * n_layers,n_decimal)}\n'
+            report_part_12 = f'Number of extra eggs due to reduction of mortality rate: {round(delta_egg_due_mort * n_layers,n_decimal)}\n'
+            report_part_13 = f'Total of extra eggs:  {round(extra_eggs_hen + delta_egg_due_mort,n_decimal)}\n'+'-'*60+'\n'
+            report_part_14 = f'Extra Income from eggs : {extra_income_hen_formated}\n'
+            report_part_15 = f'Probiotic investment: {prob_cost_total_formated}\n'
+            
+            total_income_from_eggs = format_currency((extra_income_hen - probiotic_cost_hen)*n_layers, currency_choice_str)
+            #print(total_income_from_eggs)
+    
+            report_part_16 = f'Delta income: {total_income_from_eggs}\n'
+            report_line = '-'*60+'\n'
+            report_part_17 = f'Return-Over-Investment (ROI)\nIn {percentil_slider_num} % the ROI will be equal or greater than : {roi_str}\n'
+            report_line = '-'*60+'\n'
             
             
+            text = report_part1 + report_part2 + report_part3 + report_line + report_part4 + report_part5 + report_part6 + report_line + report_part7 + report_part8 + report_part9 + report_line + report_part_10 +  report_part_11 + report_part_12 + report_part_13 + report_part_14 + report_part_15 + report_part_16 + report_line + report_part_17 + report_line
+            if event == '-COPY-':
+                clipboard.copy(text)
+                psg.popup_auto_close('Report copied to clipboard!', non_blocking=True)
+     
             
             
     window.close()
