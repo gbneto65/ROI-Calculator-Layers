@@ -146,7 +146,7 @@ def main():
         return curr_str_atul
 
     def str_to_num_convert(string):
-
+        
         try:
             num = float(string)
             return num
@@ -193,9 +193,6 @@ def main():
     '''
 
     def input_error_verify(str, msn):
-        #print(type(str))
-        
-        
         
         try:
             var = float(str)
@@ -411,7 +408,7 @@ def main():
 
         report_part_16 = f'Delta income: {total_income_from_eggs}\n'
         report_line = '-'*60+'\n'
-        report_part_17 = f'Return-Over-Investment (ROI)\nIn {percentil_slider_num} % the ROI will be equal or greater than : {roi_str}\n'
+        report_part_17 = f'Return-Over-Investment (ROI)\nIn {100-percentil_slider_num} % of the cases, ROI will be equal or greater than : {roi_str}\n'
         report_line = '-'*60+'\n'
 
         text = report_part1 + report_part2 + report_part3 + report_line + report_part4 + report_part5 + report_part6 + report_line + report_part7 + report_part8 + report_part9 + \
