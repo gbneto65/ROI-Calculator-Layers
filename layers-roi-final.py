@@ -12,6 +12,9 @@ Version: 1.1+
 
 added copy to clipboard report
 
+Version 1.11+
+
+now accept "," & '.' input as a decimal number. 
 
 next improvements
 
@@ -29,7 +32,7 @@ from pandas.io import clipboard
 
 def main():
     app_title = 'ROI Estimation - Commercial Layers'
-    app_version = 'v 1.1 +working'
+    app_version = 'v 1.11 +working'
 
     # setup enviroment
 
@@ -155,9 +158,9 @@ def main():
                 'ERROR - Please Input a valid NUMBER!\nCODE EXECUTION STOPED', keep_on_top=True)
             return '1'
 
-    def creat_distrib(aver, perc, distr_type):
+    def creat_distrib(aver, perc, distr_type, n=20000):
         # distrib type - define if it is normal, uniform, triangular
-        n = 20000  # number of repetitions used in distributions
+        #n = 20000  # number of repetitions used in distributions
 
         if distr_type.upper() == 'N':  # normal distribution
             std = aver*perc*numbers_of_std_desv
@@ -183,14 +186,7 @@ def main():
         total_egg = egg_tot+tot_delta
         return total_egg
     
-    '''
-    def remove_comma (str):
-        for i in range(len(str):
-            if i ==',':
-                           
-        
-        pass
-    '''
+    
 
     def input_error_verify(str, msn):
         
@@ -205,29 +201,17 @@ def main():
             psg.popup_error(f'ERROR Value of {msn} - Verify your input', auto_close=True, keep_on_top=True)
             return True  # with input error
         
-        
-        '''
-        if str.isdigit():
-            try:
-                var = float(str)
-                if var <= 0:
-                    psg.popup_error(
-                        f'Invalid Value of {msn}!', auto_close=True, keep_on_top=True)
-                    return True  # with input error
-
-                return False  # with input error
-            except:
-                psg.popup_error(
-                    f'ERROR Value of {msn} - Verify your input', auto_close=True, keep_on_top=True)
-                return True  # with input error
-            
-        psg.popup_error(
-            f'Invalid Value of {msn}!\n Only Integer Numbers is accepted !', auto_close=True, keep_on_top=True)
-        '''
         return True
 
     window = psg.Window(f'{app_title} - {app_version}', layout, finalize=True)
     window['-CURRENCY-'].TKStringVar.trace("w", callback)
+
+    def remove_comma(str):
+        # remove commas if input by user. this prevent input error when user input decimal numbers.
+        str_new=str.replace(",",".")
+        return str_new
+    
+        
 
     while True:
 
@@ -240,8 +224,12 @@ def main():
             window['-NUMBER_LAYERS-'].update(1)
 
         # verify if user input is correct
+        
+        
+        '''
         if input_error_verify(values['-EGG_PRICE_AVER-'], ' EGG PRICE '):
             window['-EGG_PRICE_AVER-'].update('1')
+            
 
         if input_error_verify(values['-FEED_PRICE_AVER-'], ' FEED COST '):
             window['-FEED_PRICE_AVER-'].update('1')
@@ -254,25 +242,24 @@ def main():
 
         if input_error_verify(values['-PROB_COST-'], ' PROBIOTIC COST '):
             window['-PROB_COST-'].update('1')
-
+        '''
+        
         # calculations
-        egg_price_aver_num = str_to_num_convert(values['-EGG_PRICE_AVER-'])
-        egg_price_var_perc_num = str_to_num_convert(
-            values['-SL_EGG_PRICE-']/100)
+        egg_price_aver_num = str_to_num_convert(remove_comma(values['-EGG_PRICE_AVER-']))
+        
+        egg_price_var_perc_num = str_to_num_convert(values['-SL_EGG_PRICE-']/100)
         egg_price_distr = creat_distrib(
             egg_price_aver_num, egg_price_var_perc_num, distrib)/egg_price_units  # price por egg
 
-        feed_price_aver_num = str_to_num_convert(values['-FEED_PRICE_AVER-'])
-        feed_price_var_perc_num = str_to_num_convert(
-            values['-SL_FEED_PRICE-']/100)
-        feed_price_distr = creat_distrib(
-            feed_price_aver_num, feed_price_var_perc_num, distrib)
+        feed_price_aver_num = str_to_num_convert(remove_comma(values['-FEED_PRICE_AVER-']))
+        feed_price_var_perc_num = str_to_num_convert(values['-SL_FEED_PRICE-']/100)
+        feed_price_distr = creat_distrib(feed_price_aver_num, feed_price_var_perc_num, distrib)
 
-        feed_intake_aver_num = str_to_num_convert(values['-FEED_INTAKE_AVER-'])
+        feed_intake_aver_num = str_to_num_convert(remove_comma(values['-FEED_INTAKE_AVER-']))
 
-        prob_cost_aver_num = str_to_num_convert(values['-PROB_COST-'])
+        prob_cost_aver_num = str_to_num_convert(remove_comma(values['-PROB_COST-']))
 
-        prod_weeks_num = str_to_num_convert(values['-PROD_WEEKS-'])
+        prod_weeks_num = str_to_num_convert(remove_comma(values['-PROD_WEEKS-']))
 
         total_eggs_num = str_to_num_convert(values['-SL_TOTAL_EGG_CYCLE-'])
 
